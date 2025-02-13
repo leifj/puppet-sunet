@@ -13,6 +13,7 @@ class sunet::redictcluster(
 )
 {
 
+  $fqdn = $facts['networking']['fqdn']
   # Allow the user to either specify the variable in cosmos-rules or in hiera
   if $cluster_announce_ip == '' {
     $__cluster_announce_ip = lookup('cluster_announce_ip', undef, undef, '')
@@ -29,6 +30,20 @@ class sunet::redictcluster(
   }
 
   $redict_password = safe_hiera('redict_password')
+
+  if $tls {
+    file { "/etc/ssl/certs/${fqdn}_infra.crt":
+      mode   => '0644',
+    }
+
+    file { "/etc/ssl/private/${fqdn}_infra.key":
+      mode   => '0644',
+    }
+
+    file { '/etc/ssl/private':
+      mode   => '0711',
+    }
+  }
 
   sunet::docker_compose { 'redictcluster_compose':
     content          => template('sunet/redictcluster/docker-compose.yml.erb'),
